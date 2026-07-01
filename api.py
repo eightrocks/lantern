@@ -1,24 +1,28 @@
 import os
 from datetime import date, datetime
 
+import numpy as np
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 
 load_dotenv()
 
 app = FastAPI()
 
 hf_token = os.getenv("HF_TOKEN")
-model = SentenceTransformer("BAAI/bge-base-en-v1.5", token=hf_token)
+model = SentenceTransformer("all-MiniLM-L6-v2", token=hf_token)
 
 
 def predict_relevance(current_description: str, prior_description: str, threshold: float = 0.90) -> bool:
-    embeddings = model.encode([current_description, prior_description], convert_to_numpy=True)
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    return float(similarity) >= threshold
+    embeddings = model.encode(
+        [current_description, prior_description],
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+    )
+    similarity = float(np.dot(embeddings[0], embeddings[1]))
+    return similarity >= threshold
 
 # 1. Define the lowest level models first
 class Study(BaseModel):

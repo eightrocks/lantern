@@ -1,29 +1,32 @@
 import os
-
-from dotenv import load_dotenv
+import numpy as np
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
+from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv()  # Load environment variables from .env file
 
 hf_token = os.getenv("HF_TOKEN")
-model = SentenceTransformer("BAAI/bge-base-en-v1.5", token=hf_token)
 
+model = SentenceTransformer("all-MiniLM-L6-v2", token=hf_token)
 
-def predict_relevance(current_description: str, prior_description: str, threshold: float = 0.90) -> bool:
-    embeddings = model.encode([current_description, prior_description], convert_to_numpy=True)
-    similarity = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    return float(similarity) >= threshold
+A = "MRI BRAIN STROKE LIMITED WITHOUT CONTRAST"
+B = "MRI BRAIN STROKE LIMITED WITHOUT CONTRAST"
+C = "CT HEAD WITHOUT CNTRST"
 
+embeddings = model.encode(
+    [A, C],
+    convert_to_numpy=True,
+    normalize_embeddings=True,
+)
 
-current_description = "MRI BRAIN STROKE LIMITED WITHOUT CONTRAST"
-prior_descriptions = [
-    "MRI BRAIN STROKE LIMITED WITHOUT CONTRAST",
-    "CT HEAD WITHOUT CNTRST",
-]
+embeddings2 = model.encode(
+    [B, A],
+    convert_to_numpy=True,
+    normalize_embeddings=True,
+)
 
-for prior_description in prior_descriptions:
-    embeddings = model.encode([current_description, prior_description], convert_to_numpy=True)
-    score = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
-    is_relevant = predict_relevance(current_description, prior_description)
-    print(f"{prior_description}: similarity={score:.3f}, predicted_is_relevant={is_relevant}")
+score1 = float(np.dot(embeddings[0], embeddings[1]))
+score2 = float(np.dot(embeddings2[0], embeddings2[1]))
+
+print(score1)
+print(score2)
