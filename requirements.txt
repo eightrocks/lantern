@@ -1,4 +1,5 @@
 fastapi
 uvicorn[standard]
 sentence-transformers 
-scikit-learn
+python-dotenv
+numpy
